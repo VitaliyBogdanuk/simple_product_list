@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Catalog</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div class="container">
+        <h1>Каталог товарів</h1>
+
+        <div class="controls">
+            <input id="searchInput" type="text" placeholder="Пошук по назві" autocomplete="off" />
+
+            <div id="categoryButtons" class="catButtons"></div>
+
+            <select id="sortSelect">
+                <option value="none">Без сортування</option>
+                <option value="priceAsc">Ціна за зростанням</option>
+                <option value="priceDesc">Ціна за спаданням</option>
+            </select>
+        </div>
+
+        <div class="grid">
+            <section class="panel">
+                <h2>Товари</h2>
+                <div id="productsList" class="products"></div>
+            </section>
+
+            <section class="panel">
+                <h2 class="cartTitleRow">
+                    <span>Кошик</span>
+                    <span id="cartBadge" class="badge">0</span>
+                </h2>
+
+                <div id="cartList" class="cart"></div>
+
+                <div class="cartFooter">
+                    <div class="totalRow">
+                        <span>Кількість:</span>
+                        <strong id="cartCount">0</strong>
+                    </div>
+                    <div class="totalRow">
+                        <span>Сума:</span>
+                        <strong id="cartTotal">0</strong>
+                    </div>
+
+                    <button id="clearCartBtn" class="btn danger" type="button">Очистити кошик</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
