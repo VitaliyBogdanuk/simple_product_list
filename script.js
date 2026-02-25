@@ -26,11 +26,47 @@ init();
 
 function init() {
     renderCategoryButtons();
-    // loadCart();
+    loadCart();
 
     renderProducts();
-    // renderCart();
+    renderCart();
 
+    searchInput.addEventListener('input', renderProducts);
+    sortSelect.addEventListener('change', renderProducts);
+
+    productsList.addEventListener('click', function(e){
+        const btn = e.target.closest('button');
+        if(!btn) return;
+
+        if(btn.dataset.action === 'add') {
+            addTocart(Number(btn.dataset.id));
+        }
+    });
+
+    cartList.addEventListener('click', function(e){
+        const btn = e.target.closest('button');
+        if(!btn) return;
+
+        const id = Number(btn.dataset.id);
+        const action = btn.dataset.action;
+
+        if(action === 'inc') changeQty(id, 1);
+        if(action === 'dec') changeQty(id, -1);
+        if(action === 'remove') removeFromCart(id);
+    });
+
+    clearCartBtn.addEventListener('click', clearCart);
+
+    categoryButtons.addEventListener('click', function(e){
+        const btn = e.target.closest('button');
+        if(!btn) return;
+
+        if(btn.dataset.action === 'category') {
+            activeCategory = btn.dataset.category;
+            updateActiveCategoryButton();
+            renderProducts();
+        }
+    });
 
 }
 
@@ -195,3 +231,179 @@ function addTocart(productId) {
     saveCart();
     renderCart();
 }
+
+function changeQty(productId, delta){
+    const key = String(productId);
+    if(!cart[key]) return;
+
+    cart[key] = cart[key] + delta;
+    if(cart[key] <= 0) delete cart[key];
+    saveCart();
+    renderCart();
+}
+
+function removeFromCart(productId) {
+    const key = String(productId);
+    if(!cart[key]) return;
+
+    delete cart[key];
+
+    saveCart();
+    renderCart();
+}
+
+function clearCart() {
+    cart = {};
+    saveCart();
+    renderCart();
+}
+
+function renderCart() {
+    cartList.innerHTML = "";
+
+    const ids = Object.keys(cart);
+
+    if (ids.length === 0) {
+        const div = document.createElement('div');
+        div.className = 'empty';
+        div.textContent = 'Кошик порожній';
+        cartList.appendChild(div);
+
+        cartCount.textContent = '0';
+        cartTotal.textContent = '0';
+        cartBadge.textContent = '0';
+
+        clearCartBtn.disabled = true;
+        return;
+    }
+
+    clearCartBtn.disabled = false;
+
+    let totalCount = 0;
+    let totalSum = 0;
+
+    for (let i = 0; i < ids.length; i++) {
+        const id = Number(ids[i]);
+        const qty = cart[String(id)];
+
+        const product = findProductById(id);
+        if(!product) continue;
+
+        const lineSum = product.price * qty;
+
+        totalCount = totalCount + qty;
+        totalSum = totalSum + lineSum;
+
+        const item = document.createElement('div');
+        item.className = 'cartItem';
+
+        const top = document.createElement('div');
+        top.className = 'cartTop';
+
+        const name = document.createElement('div');
+        name.className = 'cartName';
+        name.textContent = product.title;
+
+        const line = document.createElement('div');
+        line.className = 'cartLine';
+        line.textContent = lineSum;
+
+        top.appendChild(name);
+        top.appendChild(line);
+
+        const info = document.createElement('div');
+        info.className = 'cartLine';
+        info.textContent = 'Ціна: ' + product.price;
+
+        const actions = document.createElement('div');
+        actions.className = 'cartActions';
+
+        const qtyRow = document.createElement('div');
+        qtyRow.className = 'qtyRow';
+
+        const decBtn = document.createElement('button');
+        decBtn.className = 'btn secondary';
+        decBtn.type = 'button';
+        decBtn.textContent = '-';
+        decBtn.dataset.action = 'dec';
+        decBtn.dataset.id = String(id);
+
+        const qtyBox = document.createElement('div');
+        qtyBox.className = 'qtyBox';
+        qtyBox.textContent = String(qty);
+
+        const incBtn = document.createElement('button');
+        incBtn.className = 'btn secondary';
+        incBtn.type = 'button';
+        incBtn.textContent = '+';
+        incBtn.dataset.action = 'inc';
+        incBtn.dataset.id = String(id);
+
+        qtyRow.appendChild(decBtn);
+        qtyRow.appendChild(qtyBox);
+        qtyRow.appendChild(incBtn);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn danger';
+        removeBtn.type = 'button';
+        removeBtn.textContent = 'Видалити';
+        removeBtn.dataset.action = 'remove';
+        removeBtn.dataset.id = String(id);
+
+        actions.appendChild(qtyRow);
+        actions.appendChild(removeBtn);
+
+        item.appendChild(top);
+        item.appendChild(info);
+        item.appendChild(actions);
+
+        cartList.appendChild(item);
+    }
+
+    cartCount.textContent = String(totalCount);
+    cartTotal.textContent = totalSum;
+    cartBadge.textContent = String(totalCount);
+}
+
+function onCartClick(e){
+    const btn = e.target.closest('button');
+
+    if(!btn) return;
+
+    const id = Number(btn.dataset.id);
+    const action = btn.dataset.action;
+
+    if(action === 'inc') changeQty(id, 1);
+    if(action === 'dec') changeQty(id, -1);
+    if(action === 'remove') removeFromCart(id);
+}
+
+function saveCart() {
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+}
+
+function loadCart() {
+    const raw = localStorage.getItem(CART_KEY);
+
+    if(!raw) {
+        cart = {};
+        return;
+    }
+
+    try {
+        const data = JSON.parse(raw);
+        if(data && typeof data === 'object') cart = data;
+        else cart = {};
+    } catch (e) {
+        cart = {};
+    }
+}
+
+function findProductById(id) {
+    for (let i = 0; i < products.length; i++) {
+        if(products[i].id === id) return products[i];
+    }
+
+    return null;
+}
+
